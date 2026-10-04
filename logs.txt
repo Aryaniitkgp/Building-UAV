@@ -1,0 +1,12 @@
+Flow quality is gated too hard: EKF2_OF_QMIN is 110, far above PX4's default, 
+but your PMW3901's quality sits right around that number. On the ground and 
+at liftoff the median is about 97, and 72% of samples fall under 110. 
+In hover it's about 116, with 31% under. The result is that flow was fused only 0–43% of the
+time around takeoff and 50–88% in hover, so the EKF is partly blind exactly when the drone leaves 
+the ground. Test ratios stay near 0, so I see no sign of a wrong flow rotation, scale or offset. 
+About 4% of samples read exactly 0 quality all flight, which is worth a look at lighting, floor texture and 
+lens focus.
+MPC_THR_HOVER is 0.5, but the estimator settled at 0.70. The rangefinder shows the drone still on the ground (0.13 m) until about 71 s, roughly 6 s after takeoff was detected. During that time it's light on its feet, then jumps off the ground. Setting the parameter near 0.7 should shorten that.
+There's a steady roll bias. In hover with centered sticks, the roll setpoint averaged +1.4° versus 0.2° in pitch. The position controller has to lean constantly to hold place. Its integrator starts from zero at liftoff, so the drone slides the other way first. Around 73 s the roll setpoint spikes to about +3.9° while y moves 0.3 m. Left and right motor outputs are balanced to within 1%, so I'd suspect level or accelerometer calibration first (SENS_BOARD_X_OFF 3.4° and Y_OFF -4.5° are large), or a draft in the room.
+The battery was low. It rested at 15.0 V before arming (3.75 V/cell, roughly a quarter charged), then sagged to about 14 V at 41 A in hover. PX4 reported low, critical and emergency battery levels during the flight. That costs thrust headroom and partly explains the high hover throttle. It's worth checking the reading with a multimeter and fully charging to 16.8 V before test flights.
+Your sticks were part of the picture. You held roughly 20–35% right roll from about 68 to 79 s and some back pitch from about 75 to 83 s. That suggests you were fighting a visible left/forward drift, but it also makes the log harder to read, because in Position mode held sticks move the drone themselves.
